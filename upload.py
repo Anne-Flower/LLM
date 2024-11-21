@@ -4,17 +4,19 @@ import PyPDF2
 import re
 import requests
 
+
 def download_from_drive(file_id, local_file_path):
     try:
         drive_url = f"https://drive.google.com/uc?id={file_id}&export=download"
         session = requests.Session()
         response = session.get(drive_url, stream=True)
-        
+
         for key, value in response.cookies.items():
             if key.startswith('download_warning'):
                 drive_url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm={value}"
                 response = session.get(drive_url, stream=True)
                 break
+
 
         with open(local_file_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=32768):
@@ -25,6 +27,7 @@ def download_from_drive(file_id, local_file_path):
         print(f"Error downloading from Google Drive: {e}")
 
 def convert_specific_pdf_to_text(file_path="sample.pdf"):
+
     try:
         if not os.path.exists(file_path):
             print(f"Error: file {file_path} not found.")
@@ -134,18 +137,18 @@ read_from_drive_button = tk.Button(
 )
 read_from_drive_button.pack(pady=10)
 
-demonstrate_button = tk.Button(
+demonstrate_button_rag = tk.Button(
     root, 
     text="Demonstrate RAG vs No RAG", 
     command=demonstrate_rag_vs_no_rag
 )
-demonstrate_button.pack(pady=10)
+demonstrate_button_rag.pack(pady=10)
 
-demonstrate_button = tk.Button(
+demonstrate_button_temperature = tk.Button(
     root, 
     text="Demonstrate RAG vs No RAG with temperature", 
     command=demonstrate_rag_vs_no_rag
 )
-demonstrate_button.pack(pady=10)
+demonstrate_button_temperature.pack(pady=10)
 
 root.mainloop()
