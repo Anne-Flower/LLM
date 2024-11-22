@@ -1,8 +1,10 @@
 import os
 import tkinter as tk
+from tkinter import simpledialog
 import PyPDF2
 import re
 import requests
+import json
 
 
 def download_from_drive(file_id, local_file_path):
@@ -17,7 +19,6 @@ def download_from_drive(file_id, local_file_path):
                 response = session.get(drive_url, stream=True)
                 break
 
-
         with open(local_file_path, "wb") as f:
             for chunk in response.iter_content(chunk_size=32768):
                 if chunk:
@@ -26,20 +27,20 @@ def download_from_drive(file_id, local_file_path):
     except Exception as e:
         print(f"Error downloading from Google Drive: {e}")
 
-def convert_specific_pdf_to_text(file_path="sample.pdf"):
 
+def convert_specific_pdf_to_text(file_path="sample.pdf"):
     try:
         if not os.path.exists(file_path):
             print(f"Error: file {file_path} not found.")
             return
-        
+
         with open(file_path, 'rb') as pdf_file:
             pdf_reader = PyPDF2.PdfReader(pdf_file)
             text = ''
             for page in pdf_reader.pages:
                 if page.extract_text():
                     text += page.extract_text() + " "
-            
+
             text = re.sub(r'\s+', ' ', text).strip()
             sentences = re.split(r'(?<=[.!?]) +', text)
             chunks = []
@@ -52,18 +53,20 @@ def convert_specific_pdf_to_text(file_path="sample.pdf"):
                     current_chunk = sentence + " "
             if current_chunk:
                 chunks.append(current_chunk)
-            
+
             with open("vault.txt", "a", encoding="utf-8") as vault_file:
                 for chunk in chunks:
                     vault_file.write(chunk.strip() + "\n")
-            
+
             print(f"PDF '{file_path}' added to vault.txt in chunks.")
     except Exception as e:
         print(f"Error converting PDF: {e}")
 
+
 def convert_pdf_from_drive(file_id, local_file_path="sample.pdf"):
     download_from_drive(file_id, local_file_path)
     convert_specific_pdf_to_text(local_file_path)
+
 
 def query_llm(question, context="", temperature=0.7):
     if context:
@@ -72,9 +75,36 @@ def query_llm(question, context="", temperature=0.7):
     else:
         print("**Mode: Without RAG**")
         prompt = f"Question: {question}\nAnswer:"
-    
-    print(f"Using prompt:\n{prompt}")
-    return f"Generated answer for: {question} (Temperature={temperature})"
+
+    url = "http://localhost:11434/api/generate"
+    payload = {
+        "model": "llama2",
+        "prompt": prompt,
+        "options": {"temperature": temperature}
+    }
+
+    try:
+        response = requests.post(url, json=payload, stream=True)
+        response.raise_for_status()
+
+        full_response = ""
+        for line in response.iter_lines():
+            if line:
+                try:
+                    json_line = json.loads(line.decode("utf-8"))
+                    if "response" in json_line:
+                        full_response += json_line["response"]
+                        print(json_line["response"], end="")
+                except json.JSONDecodeError as e:
+                    print(f"Erreur de parsing JSON : {e}")
+                    print(f"Ligne problématique : {line.decode('utf-8')}")
+        
+        return full_response.strip()
+    except requests.exceptions.RequestException as e:
+        print(f"Error during API call: {e}")
+        return "An error occurred while generating the response."
+
+
 
 def get_context_from_vault(question, vault_file="vault.txt"):
     try:
@@ -94,6 +124,7 @@ def get_context_from_vault(question, vault_file="vault.txt"):
     except Exception as e:
         print(f"Error searching context in vault.txt: {e}")
         return ""
+
 
 def demonstrate_rag_vs_no_rag():
     print("Choose mode:")
@@ -119,6 +150,20 @@ def demonstrate_rag_vs_no_rag():
 
     print("\n--- Answer ---")
     print(answer)
+
+
+# Gestion de la température (ajoutée)
+def set_temperature():
+    global user_temperature
+    try:
+        temp = simpledialog.askfloat("Temperature", "Enter a temperature value (e.g., 0.7):")
+        if temp is not None:
+            user_temperature = temp
+            print(f"Temperature set to {user_temperature}")
+        else:
+            print("Temperature unchanged.")
+    except ValueError:
+        print("Invalid temperature input. Please try again.")
 
 root = tk.Tk()
 root.title("Google Drive File Processing")

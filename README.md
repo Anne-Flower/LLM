@@ -26,6 +26,8 @@ This project implements **Retrieval-Augmented Generation (RAG)** using a large l
 
   - pip3 install -r requirements.txt
 
+  - ollama pull llama2
+
 
 ## **Run**
   - Local : python3 localrag.py
