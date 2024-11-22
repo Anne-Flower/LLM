@@ -20,15 +20,16 @@ This project implements **Retrieval-Augmented Generation (RAG)** using a large l
 ---
 
 ## **Installation**
-git clone https://github.com/Anne-Flower/LLM.git
-cd LLM-Project
+  - git clone https://github.com/Anne-Flower/LLM.git
 
-pip3 install -r requirements.txt
+  - cd LLM-Project
+
+  - pip3 install -r requirements.txt
 
 
 ## **Run**
-Local : python3 localrag.py
-Drive :  python3 upload.py
+  - Local : python3 localrag.py
+  - Drive :  python3 upload.py
 
 
 
@@ -36,8 +37,8 @@ Drive :  python3 upload.py
 What is a supernova?
 
 **Temperature**
-Precision level of response : Adjust the temperature parameter to control the nature of responses
+- Precision level of response : Adjust the temperature parameter to control the nature of responses
 
 **Rags**
-With RAG: Retrieves context from stored documents for enhanced accuracy.
-Without RAG: Pure LLM-generated response based solely on the model's training.
+- With RAG: Retrieves context from stored documents for enhanced accuracy.
+- Without RAG: Pure LLM-generated response based solely on the model's training.
